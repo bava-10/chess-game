@@ -2,6 +2,8 @@
 <html>
 <head>
   <title>My Chess Game</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * { box-sizing: border-box; }
 
@@ -33,28 +35,67 @@
 
     #container {
       display: flex;
-      gap: 24px;
+      gap: 16px;
       align-items: flex-start;
       flex-wrap: wrap;
       justify-content: center;
+      width: 100%;
     }
 
+    /* On mobile — panel goes below board */
+    @media (max-width: 650px) {
+      #container {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      #panel {
+        width: 100%;
+        max-width: 340px;
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+
+      .panel-box {
+        flex: 1;
+        min-width: 140px;
+      }
+
+      #new-game-btn {
+        width: 100%;
+      }
+    }
     #board {
       display: grid;
-      grid-template-columns: repeat(8, 70px);
-      grid-template-rows: repeat(8, 70px);
+      grid-template-columns: repeat(8, var(--sq));
+      grid-template-rows: repeat(8, var(--sq));
       border: 3px solid #6b5a3e;
       box-shadow: 0 20px 60px rgba(0,0,0,0.8);
     }
 
     .square {
-      width: 70px;
-      height: 70px;
+      width: var(--sq);
+      height: var(--sq);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       position: relative;
+    }
+
+    /* Desktop */
+    @media (min-width: 768px) {
+      :root { --sq: 70px; }
+    }
+
+    /* Tablet */
+    @media (max-width: 767px) and (min-width: 480px) {
+      :root { --sq: 52px; }
+    }
+
+    /* Mobile */
+    @media (max-width: 479px) {
+      :root { --sq: 42px; }
     }
 
     .light { background: #f0d9b5; }
@@ -418,6 +459,140 @@
     .square.selected div {
       transform: translateY(-4px) scale(1.1);
     }
+    /* Color picker popup */
+    #color-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+
+    #color-overlay.show {
+      display: flex;
+    }
+
+    #color-box {
+      background: #1a1a22;
+      border: 2px solid #d4af7a;
+      border-radius: 12px;
+      padding: 36px;
+      text-align: center;
+    }
+
+    #color-box h2 {
+      color: #d4af7a;
+      letter-spacing: 3px;
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    #color-box p {
+      color: #6b5a3e;
+      font-size: 12px;
+      letter-spacing: 1px;
+      margin-bottom: 28px;
+    }
+
+    #color-choices {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+    }
+
+    .color-btn {
+      width: 120px;
+      height: 140px;
+      border-radius: 10px;
+      cursor: pointer;
+      border: 2px solid #3a3a48;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      transition: all 0.2s;
+      font-family: Georgia, serif;
+    }
+
+    .color-btn:hover {
+      transform: translateY(-4px);
+      border-color: #d4af7a;
+      box-shadow: 0 8px 24px rgba(212,175,122,0.3);
+    }
+
+    .color-btn.white-btn {
+      background: linear-gradient(135deg, #f0e8d8, #d4c4a8);
+    }
+
+    .color-btn.black-btn {
+      background: linear-gradient(135deg, #2a2a38, #1a1a22);
+    }
+
+    .color-btn .coin-preview {
+      font-size: 52px;
+      line-height: 1;
+    }
+
+    .color-btn .color-label {
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+
+    .white-btn .color-label { color: #5a4020; }
+    .black-btn .color-label { color: #d4af7a; }
+
+    .color-btn .color-hint {
+      font-size: 10px;
+      letter-spacing: 1px;
+    }
+
+    .white-btn .color-hint { color: #8a7a6a; }
+    .black-btn .color-hint { color: #6b5a3e; }
+    /* Mobile */
+    @media (max-width: 479px) {
+      :root { --sq: 42px; }
+    }
+
+    @media (max-width: 479px) {
+      #scoreboard {
+        gap: 8px;
+      }
+
+      .score-box {
+        min-width: 100px;
+        padding: 8px 10px;
+      }
+
+      .score-rating {
+        font-size: 18px;
+      }
+
+      #timers {
+        gap: 8px;
+      }
+
+      .timer-box {
+        min-width: 90px;
+        padding: 8px 12px;
+      }
+
+      .timer-value {
+        font-size: 18px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      #game-score {
+        font-size: 11px;
+        gap: 12px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -563,6 +738,7 @@
     let gameOver = false;
     let mode = "2p"; // "2p" or "ai"
     let aiThinking = false;
+    let playerColor = "w"; // w = player is white, b = player is black
 
     // ─── Rating & Score system ─────────────────────────────
     const POINT_VALUES = { P:1, N:3, B:3, R:5, Q:9, K:0 };
@@ -647,7 +823,7 @@
     let timeWhite = TIME_LIMIT;
     let timeBlack = TIME_LIMIT;
     let timerInterval = null;
-    function setMode(m) {
+   function setMode(m) {
       mode = m;
       document.getElementById("btn-2p").style.background  = m==="2p" ? "#d4af7a" : "transparent";
       document.getElementById("btn-2p").style.color       = m==="2p" ? "#0f0f13" : "#6b5a3e";
@@ -655,7 +831,46 @@
       document.getElementById("btn-ai").style.background  = m==="ai" ? "#d4af7a" : "transparent";
       document.getElementById("btn-ai").style.color       = m==="ai" ? "#0f0f13" : "#6b5a3e";
       document.getElementById("btn-ai").style.borderColor = m==="ai" ? "#d4af7a" : "#2a2a38";
+
+      if (m === "ai") {
+        // Show color picker first
+        document.getElementById("color-overlay").classList.add("show");
+      } else {
+        playerColor = "w";
+        resetGame();
+      }
+    }
+    function startAsColor(col) {
+      playerColor = col;
+      document.getElementById("color-overlay").classList.remove("show");
+
+      // Update name labels
+      if (col === "b") {
+        document.getElementById("name-white").value = "🤖 Computer";
+        document.getElementById("name-white").disabled = true;
+        document.getElementById("name-white").style.color = "#8a8a9a";
+        document.getElementById("name-black").disabled = false;
+        document.getElementById("name-black").style.color = "#d4af7a";
+        if (document.getElementById("name-black").value === "🤖 Computer") {
+          document.getElementById("name-black").value = "Player 1";
+        }
+      } else {
+        document.getElementById("name-black").value = "🤖 Computer";
+        document.getElementById("name-black").disabled = true;
+        document.getElementById("name-black").style.color = "#8a8a9a";
+        document.getElementById("name-white").disabled = false;
+        document.getElementById("name-white").style.color = "#d4af7a";
+        if (document.getElementById("name-white").value === "🤖 Computer") {
+          document.getElementById("name-white").value = "Player 1";
+        }
+      }
+
       resetGame();
+
+      // If player chose black, AI goes first
+      if (col === "b") {
+        setTimeout(executeAIMove, 600);
+      }
     }
 
     function initState() {
@@ -917,10 +1132,11 @@
     }
 
     function getBestAIMove() {
+      const aiColor = playerColor === "w" ? "b" : "w";
       let allMoves = [];
       for (let r=0;r<8;r++) {
         for (let c=0;c<8;c++) {
-          if (colorOf(gameBoard[r][c]) === "b") {
+          if (colorOf(gameBoard[r][c]) === aiColor) {
             const moves = getLegalMoves(gameBoard, r, c);
             moves.forEach(([nr,nc]) => allMoves.push([r,c,nr,nc]));
           }
@@ -944,8 +1160,8 @@
     }
 
     function executeAIMove() {
-      if (gameOver || turn !== "b" || mode !== "ai") return;
-      aiThinking = true;
+      const aiColor = playerColor === "w" ? "b" : "w";
+      if (gameOver || turn !== aiColor || mode !== "ai") return;
       setStatus("🤖 Computer is thinking...", "#6b5a3e");
 
       setTimeout(() => {
@@ -963,7 +1179,8 @@
         }
 
         const moveName = FILES[col] + RANKS[row];
-        moveLog.push({ color:"b", move: moveName });
+       const aiCol = playerColor === "w" ? "b" : "w";
+        moveLog.push({ color: aiCol, move: moveName });
 
         gameBoard[row][col] = gameBoard[sr][sc];
         gameBoard[sr][sc]   = null;
@@ -971,8 +1188,9 @@
 
         // Auto promote to Queen
         if (gameBoard[row][col]==="bP" && row===7) gameBoard[row][col]="bQ";
+        if (gameBoard[row][col]==="wP" && row===0) gameBoard[row][col]="wQ";
 
-        turn = "w";
+        turn = playerColor;
         startTimer();
         aiThinking = false;
 
@@ -1194,9 +1412,12 @@
           if (piece) {
             // Outer coin circle
             const coin = document.createElement("div");
+            const sqSize = window.innerWidth <= 479 ? 42
+                         : window.innerWidth <= 767 ? 52 : 70;
+            const coinSize = sqSize * 0.82;
             coin.style.cssText = `
-              width: 54px;
-              height: 54px;
+              width: ${coinSize}px;
+              height: ${coinSize}px;
               border-radius: 50%;
               display: flex;
               align-items: center;
@@ -1237,8 +1458,10 @@
             // Piece symbol
             const span = document.createElement("span");
             span.textContent = PIECES[piece];
+            const sqSize2 = window.innerWidth <= 479 ? 42
+                          : window.innerWidth <= 767 ? 52 : 70;
             span.style.cssText = `
-              font-size: 30px;
+              font-size: ${sqSize2 * 0.45}px;
               line-height: 1;
               position: relative;
               z-index: 2;
@@ -1400,7 +1623,7 @@
     // ─── Click handler ─────────────────────────────────────
     function handleClick(row, col) {
       if (gameOver || aiThinking) return;
-      if (mode === "ai" && turn === "b") return;
+      if (mode === "ai" && turn !== playerColor) return;
       const piece = gameBoard[row][col];
 
       if (selected) {
@@ -1515,7 +1738,12 @@
     updateTimerDisplay();
     updateScoreboard(null);
     renderBadges();
-    startTimer();;
+    startTimer();
+
+    // Redraw board on screen resize
+    window.addEventListener("resize", () => {
+      drawBoard();
+    });
   </script>
 <!-- Achievement Toast -->
   <div id="achievement-toast">
